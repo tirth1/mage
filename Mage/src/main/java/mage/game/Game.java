@@ -2,6 +2,7 @@ package mage.game;
 
 import mage.MageItem;
 import mage.MageObject;
+import mage.MageObjectReference;
 import mage.abilities.Ability;
 import mage.abilities.ActivatedAbility;
 import mage.abilities.DelayedTriggeredAbility;
@@ -118,6 +119,12 @@ public interface Game extends MageItem, Serializable, Copyable<Game> {
     Map<UUID, Permanent> getPermanentsEntering();
 
     Map<Zone, Map<UUID, MageObject>> getLKI();
+    Map<MageObjectReference, Map<String, Object>> getPermanentCostsTags();
+
+    /**
+     * Take the source's Costs Tags and store it for later access through the MOR.
+     */
+    void storePermanentCostsTags(MageObjectReference permanentMOR, Ability source);
 
     // Result must be checked for null. Possible errors search pattern: (\S*) = game.getCard.+\n(?!.+\1 != null)
     Card getCard(UUID cardId);
@@ -527,7 +534,6 @@ public interface Game extends MageItem, Serializable, Copyable<Game> {
 
     // game cheats (for tests only)
     void cheat(UUID ownerId, Map<Zone, String> commands);
-
     void cheat(UUID ownerId, List<Card> library, List<Card> hand, List<PermanentCard> battlefield, List<Card> graveyard, List<Card> command);
 
     // controlling the behaviour of replacement effects while permanents entering the battlefield
