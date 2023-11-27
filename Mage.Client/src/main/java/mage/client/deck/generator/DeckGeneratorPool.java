@@ -8,7 +8,9 @@ import mage.cards.repository.CardCriteria;
 import mage.cards.repository.CardInfo;
 import mage.cards.repository.CardRepository;
 import mage.constants.ColoredManaSymbol;
+import mage.constants.Rarity;
 import mage.util.RandomUtil;
+import mage.util.TournamentUtil;
 
 import java.util.*;
 
@@ -527,6 +529,37 @@ public class DeckGeneratorPool
         Map<String, Integer> count = genPool.countManaProduced(deckLands);
         // Fill up the rest of the land quota with basic lands adjusted to fit the deck's mana costs
         DeckGenerator.addBasicLands(landsCount - countNonBasic, percentage, count, basicLands);
+    }
+
+    /**
+     * Returns a map of colored mana symbol to basic land cards of that color.
+     *
+     * @param setsToUse which sets to retrieve basic lands from.
+     * @return a map of color to basic lands.
+     */
+    protected static Map<String, List<CardInfo>> generateBasicLands(List<String> setsToUse) {
+
+        Set<String> landSets = TournamentUtil.getLandSetCodeForDeckSets(setsToUse);
+
+        CardCriteria criteria = new CardCriteria();
+        if (!landSets.isEmpty()) {
+            criteria.setCodes(landSets.toArray(new String[landSets.size()]));
+        }
+        criteria.ignoreSetsWithSnowLands();
+
+        Map<String, List<CardInfo>> basicLandMap = new HashMap<>();
+
+        for (ColoredManaSymbol c : ColoredManaSymbol.values()) {
+            String landName = DeckGeneratorPool.getBasicLandName(c.toString());
+            criteria.rarities(Rarity.LAND).name(landName);
+            List<CardInfo> cards = CardRepository.instance.findCards(criteria);
+            if (cards.isEmpty()) { // Workaround to get basic lands if lands are not available for the given sets
+                criteria.setCodes("M15");
+                cards = CardRepository.instance.findCards(criteria);
+            }
+            basicLandMap.put(landName, cards);
+        }
+        return basicLandMap;
     }
 
     /**
